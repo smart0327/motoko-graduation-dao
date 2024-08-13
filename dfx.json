@@ -1,12 +1,16 @@
 {
   "canisters": {
-    "hello_backend": {
-      "main": "src/hello_backend/main.mo",
+    "dao": {
+      "main": "src/dao/main.mo",
+      "type": "motoko"
+    },
+    "token": {
+      "main": "src/token/main.mo",
       "type": "motoko"
     },
     "hello_frontend": {
       "dependencies": [
-        "hello_backend"
+        "dao"
       ],
       "source": [
         "src/hello_frontend/dist"
