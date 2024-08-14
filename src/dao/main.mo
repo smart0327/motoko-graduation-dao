@@ -12,7 +12,7 @@ import Array "mo:base/Array";
 import Types "types";
 import Token "canister:token";
 
-actor {
+actor class Dao() {
 
     type Result<A, B> = Result.Result<A, B>;
     type Member = Types.Member;
@@ -67,32 +67,31 @@ actor {
     // Returns an error if the member already exists
     public shared ({ caller }) func registerMember(member : Member) : async Result<(), Text> {
         switch (members.get(caller)) {
-            case (null) {
-                members.put(
-                    caller,
-                    {
-                        name = member.name;
-                        role = #Student;
-                    },
-                );
-                // airdrop 10 MBC to caller
-                return await Token.mint(caller, 10);
-            };
             case (?member) {
                 return #err("the member already exist");
             };
+            case (null) {};
         };
+        members.put(
+            caller,
+            {
+                name = member.name;
+                role = #Student;
+            },
+        );
+        // airdrop 10 MBC to caller
+        return await Token.mint(caller, 10);
     };
 
     // Get the member with the given principal
     // Returns an error if the member does not exist
     public query func getMember(p : Principal) : async Result<Member, Text> {
-        switch (members.get(p)) {
+        return switch (members.get(p)) {
             case (null) {
-                return #err("the member does not exist");
+                #err("the member does not exist");
             };
             case (?member) {
-                return #ok(member);
+                #ok(member);
             };
         };
     };
