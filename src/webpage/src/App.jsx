@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { hello_backend } from 'declarations/hello_backend';
+import { dao } from 'declarations/dao';
 
 function App() {
   const [greeting, setGreeting] = useState('');
@@ -7,9 +7,9 @@ function App() {
   function handleSubmit(event) {
     event.preventDefault();
     const name = event.target.elements.name.value;
-    hello_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
+    // hello_backend.greet(name).then((greeting) => {
+    //   setGreeting(greeting);
+    // });
     return false;
   }
 
