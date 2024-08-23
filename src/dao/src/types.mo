@@ -1,6 +1,13 @@
+import Result "mo:base/Result";
 import Principal "mo:base/Principal";
 import Time "mo:base/Time";
+
 module {
+    public type TokenInterface = actor {
+        mint : (Principal, Nat) -> async Result.Result<(), Text>;
+        burn : (Principal, Nat) -> async Result.Result<(), Text>;
+        balanceOf : Principal -> async Nat;
+    };
 
     public type Role = {
         #Student;

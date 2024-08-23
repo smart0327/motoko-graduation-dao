@@ -10,7 +10,7 @@ import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Types "types";
-import Token "canister:token";
+import Env "env";
 
 actor class Dao() {
 
@@ -22,6 +22,7 @@ actor class Dao() {
     type Vote = Types.Vote;
     type HttpRequest = Types.HttpRequest;
     type HttpResponse = Types.HttpResponse;
+    type TokenInterface = Types.TokenInterface;
 
     // The principal of the Webpage canister associated with this DAO canister (needs to be updated with the ID of your Webpage canister)
     stable let canisterIdWebpage : Principal = Principal.fromText("aaaaa-aa");
@@ -40,11 +41,8 @@ actor class Dao() {
     );
     let proposals = HashMap.HashMap<ProposalId, Proposal>(0, Nat.equal, func(x : Nat) : Hash.Hash { Nat32.fromNat(x) });
     var nextProposalId : Nat = 0;
-    // let tokenCanister = actor ("jaamb-mqaaa-aaaaj-qa3ka-cai") : actor {
-    //     mint : (Principal, Nat) -> async Result<(), Text>;
-    //     burn : (Principal, Nat) -> async Result<(), Text>;
-    //     balanceOf : Principal -> async Nat;
-    // };
+    let tokenCanisterEnv : Text = Env.getTokenCanisterId();
+    let tokenActor : TokenInterface = actor (tokenCanisterEnv);
 
     // Returns the name of the DAO
     public query func getName() : async Text {
@@ -62,7 +60,7 @@ actor class Dao() {
     };
 
     // Register a new member in the DAO with the given name and principal of the caller
-    // Airdrop 10 MBC tokens to the new member
+    // Airdrop 10 MBT tokens to the new member
     // New members are always Student
     // Returns an error if the member already exists
     public shared ({ caller }) func registerMember(member : Member) : async Result<(), Text> {
@@ -79,8 +77,8 @@ actor class Dao() {
                 role = #Student;
             },
         );
-        // airdrop 10 MBC to caller
-        return await Token.mint(caller, 10);
+        // airdrop 10 MBT to caller
+        return await tokenActor.mint(caller, 10);
     };
 
     // Get the member with the given principal
@@ -130,7 +128,7 @@ actor class Dao() {
     };
 
     // Create a new proposal and returns its id
-    // Returns an error if the caller is not a mentor or doesn't own at least 1 MBC token
+    // Returns an error if the caller is not a mentor or doesn't own at least 1 MBT token
     public shared ({ caller }) func createProposal(content : ProposalContent) : async Result<ProposalId, Text> {
         let callerRole = switch (members.get(caller)) {
             case (null) { #Student };
@@ -139,13 +137,13 @@ actor class Dao() {
         if (callerRole != #Mentor) {
             return #err("caller is not mentor");
         };
-        // check caller's balance is greater than or equal with 1 MBC
-        let balance = await Token.balanceOf(caller);
+        // check caller's balance is greater than or equal with 1 MBT
+        let balance = await tokenActor.balanceOf(caller);
         if (balance < 1) {
             return #err("member have insufficient balance");
         };
-        // burn 1 MBC
-        switch (await Token.burn(caller, 1)) {
+        // burn 1 MBT
+        switch (await tokenActor.burn(caller, 1)) {
             case (#err(text)) {
                 return #err(text);
             };

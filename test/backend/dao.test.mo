@@ -70,5 +70,7 @@ await suite("member management", func() : async () {
             };
             case (#err(text)) {};
         };
+
+        // check balance of alice & bob
     });
 });

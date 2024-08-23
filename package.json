@@ -9,10 +9,19 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "test:dao": "vitest run -c ./src/dao/tests/vitest.config.ts"
   },
   "type": "module",
   "workspaces": [
+    "src/dao/tests",
     "src/webpage"
-  ]
+  ],
+  "devDependencies": {
+    "@dfinity/agent": "^1.0.1",
+    "@dfinity/candid": "^1.0.1",
+    "@dfinity/identity": "^1.0.1",
+    "@dfinity/principal": "^1.0.1",
+    "@hadronous/pic": "^0.8.1",
+    "vitest": "^2.0.5"
+  }
 }

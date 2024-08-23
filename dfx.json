@@ -1,7 +1,7 @@
 {
   "canisters": {
     "dao": {
-      "main": "src/dao/main.mo",
+      "main": "src/dao/src/main.mo",
       "type": "motoko"
     },
     "token": {
@@ -32,7 +32,6 @@
   },
   "defaults": {
     "build": {
-      "args": "",
       "packtool": "mops sources"
     }
   },
