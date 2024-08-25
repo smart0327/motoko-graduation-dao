@@ -10,9 +10,8 @@ import Iter "mo:base/Iter";
 import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Types "types";
-import Env "env";
 
-actor class Dao() {
+actor class Dao(tokenCanisterId : Principal) {
 
     type Result<A, B> = Result.Result<A, B>;
     type Member = Types.Member;
@@ -41,8 +40,7 @@ actor class Dao() {
     );
     let proposals = HashMap.HashMap<ProposalId, Proposal>(0, Nat.equal, func(x : Nat) : Hash.Hash { Nat32.fromNat(x) });
     var nextProposalId : Nat = 0;
-    let tokenCanisterEnv : Text = Env.getTokenCanisterId();
-    let tokenActor : TokenInterface = actor (tokenCanisterEnv);
+    let tokenActor : TokenInterface = actor (debug_show tokenCanisterId);
 
     // Returns the name of the DAO
     public query func getName() : async Text {

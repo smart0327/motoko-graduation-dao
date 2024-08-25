@@ -1,11 +1,13 @@
 import { resolve } from "node:path";
 import { Principal } from "@dfinity/principal";
 import { Actor, PocketIc, createIdentity } from "@hadronous/pic";
-import { describe, beforeEach, afterEach, inject, it } from "vitest";
+import { describe, beforeEach, afterEach, inject, it, expect } from "vitest";
+import { IDL } from "@dfinity/candid";
 import {
   type _SERVICE as DAO_SERVICE,
   idlFactory as daoIdlFactory,
   Result,
+  init,
 } from "../../src/declarations/dao/dao.did.js";
 export const DAO_WASM_PATH = resolve(
   import.meta.dirname,
@@ -17,6 +19,11 @@ export const DAO_WASM_PATH = resolve(
   "dao",
   "dao.wasm",
 );
+
+import {
+  type _SERVICE as TOKEN_SERVICE,
+  idlFactory as tokenIdlFactory,
+} from "../../src/declarations/token/token.did.js";
 export const TOKEN_WASM_PATH = resolve(
   import.meta.dirname,
   "..",
@@ -28,39 +35,26 @@ export const TOKEN_WASM_PATH = resolve(
   "token.wasm",
 );
 
-describe("member management", () => {
+describe("Dao", () => {
   let pic: PocketIc;
-  let daoCanisterId: Principal;
   let tokenCanisterId: Principal;
   let daoActor: Actor<DAO_SERVICE>;
 
   beforeEach(async () => {
     pic = await PocketIc.create(inject("PIC_URL"));
-    // const applicationSubnets = pic.getApplicationSubnets();
-    // const mainSubnet = applicationSubnets[0];
 
-    // // daoCanisterId = await pic.createCanister({
-    // //   targetSubnetId: mainSubnet.id,
-    // // });
-    // // await pic.installCode({
-    // //   wasm: DAO_WASM_PATH,
-    // //   canisterId: daoCanisterId,
-    // //   targetSubnetId: mainSubnet.id,
-    // // });
-    // tokenCanisterId = await pic.createCanister({
-    //   targetSubnetId: mainSubnet.id,
-    // });
-    // await pic.installCode({
-    //   wasm: TOKEN_WASM_PATH,
-    //   canisterId: tokenCanisterId,
-    //   targetSubnetId: mainSubnet.id,
-    // });
+    // Deploy the TOKEN canister
+    const tokenFixture = await pic.setupCanister<TOKEN_SERVICE>({
+      idlFactory: tokenIdlFactory,
+      wasm: TOKEN_WASM_PATH,
+    });
+    tokenCanisterId = tokenFixture.canisterId;
 
+    // Deploy the DAO canister
     const fixture = await pic.setupCanister<DAO_SERVICE>({
       idlFactory: daoIdlFactory,
       wasm: DAO_WASM_PATH,
-      // targetSubnetId: mainSubnet.id,
-      // arg: IDL.encode(init({ IDL }), [tokenCanisterId]),
+      arg: IDL.encode(init({ IDL }), [tokenCanisterId]),
     });
     daoActor = fixture.actor;
   });
@@ -69,13 +63,15 @@ describe("member management", () => {
     await pic.tearDown();
   });
 
-  it("success of registering member", async () => {
+  it("allows to register member", async () => {
     let alice = createIdentity("AlicePassword");
-    let bob = createIdentity("BobPassword");
     daoActor.setIdentity(alice);
+
     const result: Result = await daoActor.registerMember({
       name: "Alice",
       role: { Student: null },
     });
+
+    expect(result).toEqual(result);
   });
 });
