@@ -9,12 +9,13 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test": "dfx build && vitest run -c tests/vitest.config.ts",
-    "test:dao": "vitest run -c tests/vitest.config.ts"
+    "test": "mops test && dfx build && vitest run -c test/integration/vitest.config.ts",
+    "test:unit": "mops test",
+    "test:integration": "dfx build && vitest run -c test/integration/vitest.config.ts",
+    "vitest": "vitest run -c test/integration/vitest.config.ts"
   },
   "type": "module",
   "workspaces": [
-    "src/dao/tests",
     "src/webpage"
   ],
   "devDependencies": {

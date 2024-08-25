@@ -8,9 +8,10 @@ import {
   idlFactory as daoIdlFactory,
   Result,
   init,
-} from "../../src/declarations/dao/dao.did.js";
+} from "../../../src/declarations/dao/dao.did.js";
 export const DAO_WASM_PATH = resolve(
   import.meta.dirname,
+  "..",
   "..",
   "..",
   ".dfx",
@@ -23,9 +24,10 @@ export const DAO_WASM_PATH = resolve(
 import {
   type _SERVICE as TOKEN_SERVICE,
   idlFactory as tokenIdlFactory,
-} from "../../src/declarations/token/token.did.js";
+} from "../../../src/declarations/token/token.did.js";
 export const TOKEN_WASM_PATH = resolve(
   import.meta.dirname,
+  "..",
   "..",
   "..",
   ".dfx",
