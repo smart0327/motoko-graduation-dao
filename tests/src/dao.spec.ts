@@ -1,37 +1,31 @@
 import { resolve } from "node:path";
 import { Principal } from "@dfinity/principal";
 import { Actor, PocketIc, createIdentity } from "@hadronous/pic";
-import { describe, beforeEach, afterEach, inject, it, expect } from "vitest";
-import { IDL } from "@dfinity/candid";
+import { describe, beforeEach, afterEach, inject, it } from "vitest";
 import {
   type _SERVICE as DAO_SERVICE,
   idlFactory as daoIdlFactory,
   Result,
-  init,
-} from "../../../declarations/dao/dao.did.js";
+} from "../../src/declarations/dao/dao.did.js";
 export const DAO_WASM_PATH = resolve(
   import.meta.dirname,
-  "..",
-  "..",
   "..",
   "..",
   ".dfx",
   "local",
   "canisters",
   "dao",
-  "dao.wasm"
+  "dao.wasm",
 );
 export const TOKEN_WASM_PATH = resolve(
   import.meta.dirname,
-  "..",
-  "..",
   "..",
   "..",
   ".dfx",
   "local",
   "canisters",
   "token",
-  "token.wasm"
+  "token.wasm",
 );
 
 describe("member management", () => {

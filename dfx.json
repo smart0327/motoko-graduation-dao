@@ -1,7 +1,7 @@
 {
   "canisters": {
     "dao": {
-      "main": "src/dao/src/main.mo",
+      "main": "src/dao/main.mo",
       "type": "motoko"
     },
     "token": {
@@ -9,12 +9,8 @@
       "type": "motoko"
     },
     "webpage": {
-      "dependencies": [
-        "dao"
-      ],
-      "source": [
-        "src/webpage/dist"
-      ],
+      "dependencies": ["dao"],
+      "source": ["src/webpage/dist"],
       "type": "assets",
       "workspace": "webpage"
     },
