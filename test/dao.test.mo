@@ -39,6 +39,20 @@ await suite(
                     },
                 );
                 await test(
+                    "when duplicate, should return error",
+                    func() : async () {
+                        // running twice, due to past state
+                        let resDao = await daoActor.registerMember({
+                            name = "Alice";
+                            role = #Student;
+                        });
+
+                        func show(a : Result<(), Text>) : Text = debug_show (a);
+                        func equal(a : Result<(), Text>, b : Result<(), Text>) : Bool = a == b;
+                        expect.result<(), Text>(resDao, show, equal).isErr();
+                    },
+                );
+                await test(
                     "should airdrop tokens",
                     func() : async () {
                         let myPrincipal : Principal = await whoAmIActor.whoami();
