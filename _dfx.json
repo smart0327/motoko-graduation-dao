@@ -1,0 +1,40 @@
+{
+  "canisters": {
+    "dao": {
+      "main": "src/dao/src/main.mo",
+      "type": "motoko"
+    },
+    "token": {
+      "main": "src/token/main.mo",
+      "type": "motoko"
+    },
+    "webpage": {
+      "dependencies": [
+        "dao"
+      ],
+      "source": [
+        "src/webpage/dist"
+      ],
+      "type": "assets",
+      "workspace": "webpage"
+    },
+    "internet_identity": {
+      "candid": "https://github.com/dfinity/internet-identity/releases/download/release-2024-08-08/internet_identity.did",
+      "frontend": {},
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2024-08-08/internet_identity_dev.wasm.gz"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

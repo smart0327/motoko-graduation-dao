@@ -41,34 +41,38 @@ describe("member management", () => {
   let daoActor: Actor<DAO_SERVICE>;
 
   beforeEach(async () => {
-    pic = await PocketIc.create(inject("PIC_URL"));
-    // const applicationSubnets = pic.getApplicationSubnets();
-    // const mainSubnet = applicationSubnets[0];
+    pic = await PocketIc.create(inject("PIC_URL"), {
+      application: 2,
+    });
+    const applicationSubnets = pic.getApplicationSubnets();
+    const mainSubnet = applicationSubnets[0];
+    const tokenSubnet = applicationSubnets[1];
 
-    // // daoCanisterId = await pic.createCanister({
-    // //   targetSubnetId: mainSubnet.id,
-    // // });
-    // // await pic.installCode({
-    // //   wasm: DAO_WASM_PATH,
-    // //   canisterId: daoCanisterId,
-    // //   targetSubnetId: mainSubnet.id,
-    // // });
-    // tokenCanisterId = await pic.createCanister({
+    // daoCanisterId = await pic.createCanister({
     //   targetSubnetId: mainSubnet.id,
     // });
     // await pic.installCode({
-    //   wasm: TOKEN_WASM_PATH,
-    //   canisterId: tokenCanisterId,
+    //   wasm: DAO_WASM_PATH,
+    //   canisterId: daoCanisterId,
     //   targetSubnetId: mainSubnet.id,
     // });
+    tokenCanisterId = await pic.createCanister({
+      targetSubnetId: mainSubnet.id,
+    });
+    console.log("token canister id", tokenCanisterId.toText());
+    await pic.installCode({
+      wasm: TOKEN_WASM_PATH,
+      canisterId: tokenCanisterId,
+      targetSubnetId: mainSubnet.id,
+    });
 
     const fixture = await pic.setupCanister<DAO_SERVICE>({
       idlFactory: daoIdlFactory,
       wasm: DAO_WASM_PATH,
-      // targetSubnetId: mainSubnet.id,
-      // arg: IDL.encode(init({ IDL }), [tokenCanisterId]),
+      targetSubnetId: mainSubnet.id,
     });
     daoActor = fixture.actor;
+    daoCanisterId = fixture.canisterId;
   });
 
   afterEach(async () => {
@@ -79,6 +83,8 @@ describe("member management", () => {
     let alice = createIdentity("AlicePassword");
     let bob = createIdentity("BobPassword");
     daoActor.setIdentity(alice);
+    console.log("dao canister id", daoCanisterId.toText());
+    console.log("token cainster id", tokenCanisterId.toText());
     const result: Result = await daoActor.registerMember({
       name: "Alice",
       role: { Student: null },

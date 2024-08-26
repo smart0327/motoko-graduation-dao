@@ -9,11 +9,14 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test:dao": "vitest run -c ./src/dao/tests/vitest.config.ts"
+    "build:dao": "dfx generate dao && dfx build dao --check",
+    "test:dao": "vitest run -c ./src/dao/tests/vitest.config.ts",
+    "e2e-test:dao": "vitest run -c ./src/dao/e2e-tests/vitest.config.ts"
   },
   "type": "module",
   "workspaces": [
     "src/dao/tests",
+    "src/dao/e2e-tests",
     "src/webpage"
   ],
   "devDependencies": {

@@ -11,6 +11,7 @@ import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Types "types";
 import Env "env";
+import Token "canister:token";
 
 actor class Dao() {
 
@@ -41,8 +42,8 @@ actor class Dao() {
     );
     let proposals = HashMap.HashMap<ProposalId, Proposal>(0, Nat.equal, func(x : Nat) : Hash.Hash { Nat32.fromNat(x) });
     var nextProposalId : Nat = 0;
-    let tokenCanisterEnv : Text = Env.getTokenCanisterId();
-    let tokenActor : TokenInterface = actor (tokenCanisterEnv);
+    // let tokenCanisterEnv : Text = Env.getTokenCanisterId();
+    // let tokenActor : TokenInterface = actor (tokenCanisterEnv);
 
     // Returns the name of the DAO
     public query func getName() : async Text {
@@ -78,7 +79,7 @@ actor class Dao() {
             },
         );
         // airdrop 10 MBT to caller
-        return await tokenActor.mint(caller, 10);
+        return await Token.mint(caller, 10);
     };
 
     // Get the member with the given principal
@@ -98,33 +99,35 @@ actor class Dao() {
     // Returns an error if the student does not exist or is not a student
     // Returns an error if the caller is not a mentor
     public shared ({ caller }) func graduate(student : Principal) : async Result<(), Text> {
-        switch (members.get(student)) {
+        let member = switch (members.get(student)) {
             case (null) {
                 return #err("the member does not exist");
             };
             case (?member) {
-                if (member.role != #Student) {
-                    return #err("the member is not student");
-                };
-                let callerRole = switch (members.get(caller)) {
-                    case (null) { #Student };
-                    case (?member) { member.role };
-                };
-                if (callerRole != #Mentor) {
-                    return #err("caller is not mentor");
-                };
-
-                members.put(
-                    student,
-                    {
-                        name = member.name;
-                        role = #Graduate;
-                    },
-                );
-
-                return #ok();
+                member;
             };
         };
+
+        if (member.role != #Student) {
+            return #err("the member is not student");
+        };
+        let callerRole = switch (members.get(caller)) {
+            case (null) { #Student };
+            case (?member) { member.role };
+        };
+        if (callerRole != #Mentor) {
+            return #err("caller is not mentor");
+        };
+
+        members.put(
+            student,
+            {
+                name = member.name;
+                role = #Graduate;
+            },
+        );
+
+        return #ok();
     };
 
     // Create a new proposal and returns its id
@@ -138,12 +141,12 @@ actor class Dao() {
             return #err("caller is not mentor");
         };
         // check caller's balance is greater than or equal with 1 MBT
-        let balance = await tokenActor.balanceOf(caller);
+        let balance = await Token.balanceOf(caller);
         if (balance < 1) {
             return #err("member have insufficient balance");
         };
         // burn 1 MBT
-        switch (await tokenActor.burn(caller, 1)) {
+        switch (await Token.burn(caller, 1)) {
             case (#err(text)) {
                 return #err(text);
             };
@@ -205,70 +208,71 @@ actor class Dao() {
     // Vote for the given proposal
     // Returns an error if the proposal does not exist or the member is not allowed to vote
     public shared ({ caller }) func voteProposal(proposalId : ProposalId, yesOrNo : Bool) : async Result<(), Text> {
-        switch (proposals.get(proposalId)) {
+        let proposal = switch (proposals.get(proposalId)) {
             case (null) {
                 return #err("the proposal does not exist");
             };
             case (?proposal) {
-                let callerRole = switch (members.get(caller)) {
-                    case (null) { #Student };
-                    case (?member) { member.role };
-                };
-                if (callerRole == #Student) {
-                    return #err("the member can not vote");
-                };
-
-                if (_hasVoted(caller, proposal)) {
-                    return #err("member have already voted");
-                };
-
-                let multiplier = switch ((callerRole, yesOrNo)) {
-                    case ((#Mentor, true)) { 5 };
-                    case ((#Mentor, false)) { -5 };
-                    case ((#Graduate, true)) { 1 };
-                    case ((#Graduate, false)) { -1 };
-                    case (_) { 0 };
-                };
-
-                // get balance of caller;
-                let callerBalance : Nat = 0;
-                let votes = Buffer.fromArray<Vote>(proposal.votes);
-                votes.add({
-                    member = caller;
-                    votingPower = callerBalance;
-                    yesOrNo;
-                });
-
-                let newVoteScore = proposal.voteScore + multiplier * callerBalance;
-                let newStatus = if (newVoteScore >= 100) {
-                    #Accepted;
-                } else if (newVoteScore <= -100) {
-                    #Rejected;
-                } else {
-                    #Open;
-                };
-                let newExecuted : ?Time.Time = if (newStatus == #Accepted) {
-                    ?Time.now();
-                } else {
-                    proposal.executed;
-                };
-                proposals.put(
-                    proposalId,
-                    {
-                        id = proposalId;
-                        content = proposal.content;
-                        creator = caller;
-                        created = proposal.created;
-                        executed = newExecuted;
-                        votes = Buffer.toArray<Vote>(votes);
-                        voteScore = newVoteScore;
-                        status = newStatus;
-                    },
-                );
-                if (newStatus == #Accepted) {
-                    return _executeProposal(proposal);
-                };
+                proposal;
             };
+        };
+        let callerRole = switch (members.get(caller)) {
+            case (null) { #Student };
+            case (?member) { member.role };
+        };
+        if (callerRole == #Student) {
+            return #err("the member can not vote");
+        };
+
+        if (_hasVoted(caller, proposal)) {
+            return #err("member have already voted");
+        };
+
+        let multiplier = switch ((callerRole, yesOrNo)) {
+            case ((#Mentor, true)) { 5 };
+            case ((#Mentor, false)) { -5 };
+            case ((#Graduate, true)) { 1 };
+            case ((#Graduate, false)) { -1 };
+            case (_) { 0 };
+        };
+
+        // get balance of caller;
+        let callerBalance : Nat = 0;
+        let votes = Buffer.fromArray<Vote>(proposal.votes);
+        votes.add({
+            member = caller;
+            votingPower = callerBalance;
+            yesOrNo;
+        });
+
+        let newVoteScore = proposal.voteScore + multiplier * callerBalance;
+        let newStatus = if (newVoteScore >= 100) {
+            #Accepted;
+        } else if (newVoteScore <= -100) {
+            #Rejected;
+        } else {
+            #Open;
+        };
+        let newExecuted : ?Time.Time = if (newStatus == #Accepted) {
+            ?Time.now();
+        } else {
+            proposal.executed;
+        };
+        proposals.put(
+            proposalId,
+            {
+                id = proposalId;
+                content = proposal.content;
+                creator = caller;
+                created = proposal.created;
+                executed = newExecuted;
+                votes = Buffer.toArray<Vote>(votes);
+                voteScore = newVoteScore;
+                status = newStatus;
+            },
+        );
+        if (newStatus == #Accepted) {
+            return _executeProposal(proposal);
         };
         return #err("Not implemented");
     };
@@ -300,21 +304,22 @@ actor class Dao() {
     };
 
     func _addMentor(principal : Principal) : Result<(), Text> {
-        switch (members.get(principal)) {
+        let member = switch (members.get(principal)) {
             case (null) {
                 return #err("the member does not exist");
             };
             case (?member) {
-                members.put(
-                    principal,
-                    {
-                        name = member.name;
-                        role = #Mentor;
-                    },
-                );
-                return #ok();
+                member;
             };
         };
+        members.put(
+            principal,
+            {
+                name = member.name;
+                role = #Mentor;
+            },
+        );
+        return #ok();
     };
 
     // Returns the Principal ID of the Webpage canister associated with this DAO canister
